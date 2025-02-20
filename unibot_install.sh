@@ -11,6 +11,10 @@ PROGRESS_FILE=".unibot_install_progress"
 
 UNIBOT_API_KEY=""
 
+# Deployment mode and flags
+DEPLOY_MODE="local"
+SKIP_BUILD=false
+
 while [ $# -gt 0 ]; do
     case "$1" in
         -unibotapikey|--unibot-api-key)
@@ -22,11 +26,21 @@ while [ $# -gt 0 ]; do
                 exit 1
             fi
             ;;
+        -k|--kubernetes)
+            DEPLOY_MODE="k8s"
+            shift
+            ;;
+        -s|--skip-build)
+            SKIP_BUILD=true
+            shift
+            ;;
         -h|--help)
             echo "Usage: $0 [-unibotapikey|--unibot-api-key <api_key>]"
             echo
             echo "Options:"
             echo "  -unibotapikey, --unibot-api-key    UniBot API key for tenant registration"
+            echo "  -k, --kubernetes                    Deploy in Kubernetes mode"
+            echo "  -s, --skip-build                    Skip UniBot plugin build and setup"
             echo "  -h, --help                         Show this help message"
             exit 0
             ;;
@@ -63,7 +77,14 @@ generate_random_string() {
 check_prerequisites() {
     log "Checking required tools..."
     
-    local tools=("git" "tutor" "docker" "pip" "openssl")
+    local tools=("git" "tutor" "pip" "openssl")
+    
+    # Add mode-specific tools
+    if [ "$DEPLOY_MODE" = "k8s" ]; then
+        tools+=("kubectl")
+    else
+        tools+=("docker")
+    fi
     local missing_tools=()
     
     for tool in "${tools[@]}"; do
@@ -78,10 +99,19 @@ check_prerequisites() {
         exit 1
     fi
 
-    if ! docker info &> /dev/null; then
-        error "Docker is not running or user lacks permissions"
-        error "Start Docker and ensure current user is in the docker group"
-        exit 1
+    if [ "$DEPLOY_MODE" = "k8s" ]; then
+        if ! kubectl cluster-info &> /dev/null; then
+            error "Cannot connect to Kubernetes cluster"
+            error "Please check your kubeconfig and cluster access"
+            exit 1
+        fi
+        log "Successfully connected to Kubernetes cluster"
+    else
+        if ! docker info &> /dev/null; then
+            error "Docker is not running or user lacks permissions"
+            error "Start Docker and ensure current user is in the docker group"
+            exit 1
+        fi
     fi
     
     mark_step_complete "prerequisites"
@@ -112,15 +142,15 @@ setup_plugin() {
     fi
     
     log "Installing plugin..."
-    if ! pip install -e "$(pwd)/tutor-unibot"; then
-        error "Failed to install plugin"
+    if ! pip install -e "$(pwd)/tutor-unibot" || ! tutor plugins list >/dev/null 2>&1; then
+        error "Failed to install plugin or list plugins"
         exit 1
     fi
     
     if ! tutor plugins list | grep -q "unibot"; then
         log "Activating plugin..."
-        if ! tutor plugins enable unibot; then
-            error "Failed to activate plugin"
+        if ! tutor plugins enable unibot || ! tutor config save >/dev/null 2>&1; then
+            error "Failed to activate plugin or save config"
             exit 1
         fi
     fi
@@ -128,6 +158,9 @@ setup_plugin() {
     cd ..
     mark_step_complete "plugin_setup"
     success "UniBot plugin successfully configured"
+
+    echo debug sleep
+    sleep 30
 }
 
 # Build and start containers
@@ -136,23 +169,44 @@ build_and_start() {
     
     if ! is_step_complete "images_built"; then
         log "Building OpenEdX image..."
-        if ! tutor images build openedx; then
+        if ! tutor images build openedx --no-cache --no-registry-cache; then
             error "Failed to build OpenEdX image"
             exit 1
         fi
         
         log "Building MFE image..."
-        if ! tutor images build mfe; then
+        if ! tutor images build mfe --no-cache --no-registry-cache; then
             error "Failed to build MFE image"
             exit 1
         fi
         mark_step_complete "images_built"
     fi
     
-    log "Starting containers..."
-    if ! tutor local launch -I; then
-        error "Failed to start containers"
-        exit 1
+    if [ "$DEPLOY_MODE" = "local" ]; then
+        log "Starting containers..."
+        if ! tutor local launch -I; then
+            error "Failed to start local deployment"
+            exit 1
+        fi
+    else
+        log "Updating Kubernetes deployments..."
+        if ! kubectl patch -k "$(tutor config printroot)/env" --patch "{\"spec\": {\"template\": {\"metadata\": {\"labels\": {\"date\": \"`date +'%Y%m%d-%H%M%S'`\"}}}}}"; then
+            error "Failed to patch Kubernetes deployments"
+            exit 1
+        fi
+        
+        log "Waiting for LMS pods to restart..."
+        if ! kubectl wait --namespace openedx --for=condition=ready pod -l app.kubernetes.io/name=lms --timeout=300s; then
+            error "Timeout waiting for LMS pods to become ready"
+            exit 1
+        fi
+        
+        log "Verifying plugin availability in Kubernetes..."
+        if ! tutor k8s exec lms pip list | grep -q "tutor-unibot"; then
+            error "UniBot plugin not found in Kubernetes environment"
+            exit 1
+        fi
+        success "UniBot plugin verified in Kubernetes environment"
     fi
     
     mark_step_complete "containers_started"
@@ -183,7 +237,12 @@ setup_oauth() {
     local CLIENT_SECRET=$(generate_random_string 32)
     
     log "Creating/updating user..."
-    local RESULT=$(tutor local run lms ./manage.py lms manage_user $USERNAME $EMAIL --staff --unusable-password 2>&1)
+    local cmd="$([[ $DEPLOY_MODE == "k8s" ]] && echo "exec" || echo "run")"
+    local RESULT
+    if ! RESULT=$(tutor $DEPLOY_MODE $cmd lms ./manage.py lms manage_user $USERNAME $EMAIL --staff --unusable-password 2>&1); then
+        error "Failed to create/update user: $RESULT"
+        exit 1
+    fi
     if echo "$RESULT" | grep -q "Found existing user: \"$USERNAME\""; then
         warning "User $USERNAME already exists, skipping user creation"
         return 0
@@ -191,18 +250,24 @@ setup_oauth() {
 
 
     log "Creating OAuth application..."
-    RESULT=$(tutor local run lms ./manage.py lms create_dot_application \
+    if ! RESULT=$(tutor $DEPLOY_MODE $cmd lms ./manage.py lms create_dot_application \
         --grant-type client-credentials \
         --redirect-uris "{% if ENABLE_HTTPS %}https{% else %}http{% endif %}://{{ CMS_HOST }}/complete/edx-oauth2/" \
         --client-id "$CLIENT_ID" \
         --client-secret "$CLIENT_SECRET" \
         --scopes user_id \
         --skip-authorization \
-        --update $OAUTH_APP_NAME $USERNAME 2>&1)
+        --update $OAUTH_APP_NAME $USERNAME 2>&1); then
+        error "Failed to create OAuth application: $RESULT"
+        exit 1
+    fi
      
     # Save credentials
-    local LMS_HOST=$(tutor config printvalue LMS_HOST)
-    local MFE_HOST=$(tutor config printvalue MFE_HOST)
+    local LMS_HOST MFE_HOST
+    if ! LMS_HOST=$(tutor config printvalue LMS_HOST) || ! MFE_HOST=$(tutor config printvalue MFE_HOST); then
+        error "Failed to get LMS_HOST or MFE_HOST values"
+        exit 1
+    fi
     
     {
         echo "OpenEdX OAuth Credentials"
@@ -259,14 +324,17 @@ setup_oauth() {
     local script_tag="<script src=\\\"$unibot_widget_url\\\"></script>"
 
     local MYSQL_ROOT_PASSWORD="$(tutor config printvalue MYSQL_ROOT_PASSWORD)"
-    tutor local exec \
+    if ! tutor $DEPLOY_MODE exec \
     mysql sh -c "mysql -u root -p"$MYSQL_ROOT_PASSWORD" -D openedx -e \"INSERT INTO uni_bot_unibotsettingsconfiguration (config_values, change_date, enabled) VALUES ('{
         \\\"UNIBOT_BASE_URL\\\": \\\"$unibot_base_url\\\",
         \\\"API_KEY\\\": \\\"$unibot_jwt_secret_key\\\",
         \\\"UNIBOT_JWT_SECRET_KEY\\\": \\\"$unibot_jwt_secret_key\\\",
         \\\"UNIBOT_API_KEY\\\": \\\"$unibot_api_key\\\"
     }', NOW(), true);
-    UPDATE site_configuration_siteconfiguration SET site_values = JSON_SET(site_values, '$.MFE_CONFIG_OVERRIDES', JSON_OBJECT('learning', JSON_OBJECT('EXTERNAL_SCRIPTS', JSON_ARRAY(JSON_OBJECT('isAuthnRequired', true, 'head', '', 'body', JSON_OBJECT('top', '', 'bottom', '$script_tag')))))) WHERE id = 1;\""
+    UPDATE site_configuration_siteconfiguration SET site_values = JSON_SET(site_values, '$.MFE_CONFIG_OVERRIDES', JSON_OBJECT('learning', JSON_OBJECT('EXTERNAL_SCRIPTS', JSON_ARRAY(JSON_OBJECT('isAuthnRequired', true, 'head', '', 'body', JSON_OBJECT('top', '', 'bottom', '$script_tag')))))) WHERE id = 1;\""; then
+        error "Failed to update MySQL configuration"
+        exit 1
+    fi
 
     # Validate response values
     if [ -z "$unibot_base_url" ] || [ -z "$unibot_api_key" ] || [ -z "$unibot_jwt_secret_key" ]; then
@@ -335,12 +403,16 @@ main() {
         check_prerequisites
     fi
     
-    if ! is_step_complete "plugin_setup"; then
-        setup_plugin
-    fi
-    
-    if ! is_step_complete "containers_started"; then
-        build_and_start
+    if [ "$SKIP_BUILD" = false ]; then
+        if ! is_step_complete "plugin_setup"; then
+            setup_plugin
+        fi
+        
+        if ! is_step_complete "containers_started"; then
+            build_and_start
+        fi
+    else
+        log "Skipping build steps due to --skip-build flag"
     fi
     
     if ! is_step_complete "oauth_setup"; then
@@ -349,7 +421,7 @@ main() {
     
     success "UniBot installation completed successfully!"
     clean_progress
-    tutor local restart
+    tutor $DEPLOY_MODE $([[ $DEPLOY_MODE == "k8s" ]] && echo "reboot" || echo "restart")
 }
 
 # Interrupt handling
