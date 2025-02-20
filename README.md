@@ -3,7 +3,7 @@
 ## Installation
 
 - Clone this repo into the `plugins` folder in the project root.
-- Switch to the virtual environment where Tutor is installed.
+- Switch to the virtual environment where Tutor==18.1.3 is installed.
 - Set `TUTOR_PLUGINS_ROOT` environment variable:
   ```bash
   export TUTOR_PLUGINS_ROOT=${PROJECT_ROOT}/plugins
@@ -34,7 +34,7 @@ This script automates the installation and configuration of UniBot on an Open ed
 The script requires the following tools to be installed and properly configured:
 
 - git
-- tutor
+- tutor==18.1.3
 - docker
 - pip
 - openssl
