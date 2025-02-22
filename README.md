@@ -4,9 +4,6 @@
 UNI Bot is an AI-powered assistant designed to enhance learning outcome and experience for both educators and students. 
 UNI Bot provides intelligent support, analytics, and automation to improve course engagement, streamline administrative tasks, and personalize learning paths.
 
-![UNI Bot Plugin Demo](./assets/UNI%20bot%20Plugin%20(demo).mp4)
-
-
 ## Why Install UNI Bot?
 Educators and learners benefit from UNI Bot’s cutting-edge AI capabilities, making teaching and studying more efficient and engaging. Key reasons to install UNI Bot include:
 - **Effortless AI Integration** – Get up and running in just 10 minutes with our automated installation script.
@@ -40,9 +37,6 @@ Educators and learners benefit from UNI Bot’s cutting-edge AI capabilities, ma
 
 **Empower Your Teaching with UNI Bot Today!**  
 [Explore UNI Bot for Educators](https://www.intela-bot.com/)
-
-![UNI Bot Plugin Demo](./assets/UNI%20bot%20plugin%20presentation%20_%20v2.mp4)
-
 ---
 
 ### **For Students: Meet UNI Bot – Your AI-Powered Learning Coach & Career Assistant!**
