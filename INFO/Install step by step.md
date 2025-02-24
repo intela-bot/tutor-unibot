@@ -39,7 +39,7 @@ mkdir plugins && cd plugins
 2. Clone the plugin repository:
 
 ```bash
-git clone https://git.intela.dev/open-source/uni-bot-on-open-edx/tutor-unibot.git
+git clone https://github.com/intela-bot/tutor-unibot.git
 ```
 
 3. Install the plugin:
