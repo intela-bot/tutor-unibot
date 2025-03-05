@@ -1,6 +1,6 @@
 import io
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 from utils import get_version
 
@@ -11,7 +11,7 @@ def load_readme():
     """
     Provides README file content.
     """
-    with io.open(os.path.join(HERE, 'README.rst'), 'rt', encoding='utf8') as f:
+    with io.open(os.path.join(HERE, 'README.md'), 'rt', encoding='utf8') as f:
         return f.read()
 
 
@@ -23,6 +23,7 @@ setup(
     author_email='info@intela.io',
     description='Tutor plugin for Uni Bot setup',
     long_description=load_readme(),
+    packages=find_packages(include=['tutor_unibot', 'tutor_unibot.*']),
     include_package_data=True,
     install_requires=['tutor>=17.0.0'],
     extras_require={'dev': ['tutor[dev]>=17.0.0']},
