@@ -66,3 +66,12 @@ Docker must be running, and the current user must have proper permissions (be in
    ```bash
    ./unibot_install.sh -unibotapikey YOUR_API_KEY
    ```
+
+#### Full Step-by-Step Installation Guide
+For a comprehensive step-by-step installation guide, refer to the [full installation documentation](https://github.com/intela-bot/tutor-unibot/blob/main/INFO/Install%20step%20by%20step.md#unibot-plugin-for-open-edx).
+
+
+## Contribution
+We welcome contributions to improve UNI Bot! Please refer to our [Contribution Guidelines](https://github.com/intela-bot/tutor-unibot/blob/main/INFO/contributing.md#contributor-covenant-code-of-conduct) for more details on how to get involved.
+
+
