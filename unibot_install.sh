@@ -147,12 +147,10 @@ setup_plugin() {
         exit 1
     fi
     
-    if ! tutor plugins list | grep -q "unibot"; then
-        log "Activating plugin..."
-        if ! tutor plugins enable unibot || ! tutor config save >/dev/null 2>&1; then
-            error "Failed to activate plugin or save config"
-            exit 1
-        fi
+    log "Activating plugin..."
+    if ! tutor plugins enable unibot || ! tutor config save >/dev/null 2>&1; then
+        error "Failed to activate plugin or save config"
+        exit 1
     fi
     
     cd ..
@@ -327,7 +325,6 @@ setup_oauth() {
     if ! tutor $DEPLOY_MODE exec \
     mysql sh -c "mysql -u root -p"$MYSQL_ROOT_PASSWORD" -D openedx -e \"INSERT INTO uni_bot_unibotsettingsconfiguration (config_values, change_date, enabled) VALUES ('{
         \\\"UNIBOT_BASE_URL\\\": \\\"$unibot_base_url\\\",
-        \\\"API_KEY\\\": \\\"$unibot_jwt_secret_key\\\",
         \\\"UNIBOT_JWT_SECRET_KEY\\\": \\\"$unibot_jwt_secret_key\\\",
         \\\"UNIBOT_API_KEY\\\": \\\"$unibot_api_key\\\"
     }', NOW(), true);
