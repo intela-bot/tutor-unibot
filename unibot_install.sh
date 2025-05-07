@@ -130,7 +130,7 @@ setup_plugin() {
     
     if [ ! -d "tutor-unibot" ]; then
         log "Cloning UniBot repository..."
-        if ! git clone https://github.com/intela-bot/tutor-unibot.git; then
+        if ! git clone -b embedded_widget_in_instructor_tab https://github.com/intela-bot/tutor-unibot.git; then
             error "Failed to clone repository"
             exit 1
         fi
