@@ -59,7 +59,7 @@ Docker must be running, and the current user must have proper permissions (be in
 
 1. Download the installation script:
    ```bash
-   wget https://raw.githubusercontent.com/intela-bot/tutor-unibot/main/unibot_install.sh && chmod +x unibot_install.sh
+   wget https://raw.githubusercontent.com/intela-bot/tutor-unibot/embedded_widget_in_instructor_tab/unibot_install.sh && chmod +x unibot_install.sh
    ```
 
 2. Run the script with your UniBot API key:
