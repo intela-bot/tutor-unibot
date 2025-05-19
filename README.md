@@ -64,7 +64,7 @@ Docker must be running, and the current user must have proper permissions (be in
 
 2. Run the script with your UniBot API key:
    ```bash
-   ./unibot_install.sh -unibotapikey YOUR_API_KEY
+   ./unibot_install.sh
    ```
 
 #### Full Step-by-Step Installation Guide
