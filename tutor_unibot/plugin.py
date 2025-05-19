@@ -8,7 +8,7 @@ config = {
         'EDX_UNIBOT_PIP_DEPENDENCY_URL': (
             'git+https://github.com/intela-bot/edx-unibot.git@{{ EDX_UNIBOT_BRANCH }}#egg=uni_bot'
         ),
-        'EDX_UNIBOT_BRANCH': 'embedded_widget_in_instructor_tab',
+        'EDX_UNIBOT_BRANCH': 'custom_widget_in_separate_tab',
         'EDX_UNIBOT_VCS_URL': 'https://github.com/intela-bot/edx-unibot',
         'EDX_UNIBOT_PATH_INSIDE_CONTAINER': '/openedx/requirements/edx-unibot/',
         'EDX_UNIBOT_SETTING_UNIBOT_BASE_URL': 'https://example.com',
