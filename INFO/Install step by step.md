@@ -118,7 +118,7 @@ tutor local launch
 
 ## 5. Open edX Configuration
 
-1. Configure UNIbot Settings:
+#### 1. Configure UNIbot Settings:
 
    - Access Open edX LMS admin page
    - Navigate to UNIbot settings
@@ -127,7 +127,7 @@ tutor local launch
      ![Add Configuration](./images/12.png)
    - Enter Meta-Admin credentials and enable the configuration
 
-2. Update Site Configuration:
+#### 2. Update Site Configuration:
    - Navigate to site configuration in LMS admin panel
      ![Site Configuration](./images/13.png)
    - Select the site without ports in the name
