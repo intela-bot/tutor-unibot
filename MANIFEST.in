@@ -1,0 +1,9 @@
+include utils.py
+include Makefile
+include config.yml.example
+
+recursive-include tutor_unibot/patches *
+recursive-include requirements *
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
