@@ -1,0 +1,8 @@
+UNIBOT_FRONTEND_PLATFORM_NPM_DEPENDENCY_URL: git+https://git.intela.dev/open-source/uni-bot-on-open-edx/frontend-platform.git
+EDX_UNIBOT_PIP_DEPENDENCY_URL: git+https://git.intela.dev/open-source/uni-bot-on-open-edx/edx-unibot.git#egg=uni_bot
+EDX_UNIBOT_BRANCH: master
+EDX_UNIBOT_VCS_URL: https://git.intela.dev/open-source/uni-bot-on-open-edx/edx-unibot
+EDX_UNIBOT_PATH_INSIDE_CONTAINER: /openedx/requirements/edx-unibot/
+EDX_UNIBOT_SETTING_UNIBOT_BASE_URL: https://example.com
+EDX_UNIBOT_SETTING_UNIBOT_JWT_SECRET_KEY: "<JWT_TOKEN>"
+EDX_UNIBOT_SETTING_INCLUDE_FILE_CONTENT_DURING_DATA_COLLECTION = True
