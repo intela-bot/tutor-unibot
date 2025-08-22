@@ -1,0 +1,6 @@
+-c constraints.txt
+-r base.txt
+
+black
+mypy
+pylint
