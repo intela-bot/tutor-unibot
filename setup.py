@@ -24,7 +24,8 @@ setup(
     long_description=load_readme(),
     packages=find_packages(exclude=['tests*']),
     include_package_data=True,
-    install_requires=load_requirements('requirements/base.in'),
-    extras_require={'dev': load_requirements('requirements/development.in')},
+    package_data={'tutor_unibot': ['patches/*']},
+    install_requires=['tutor>=17.0.0', 'importlib_resources'],
+    extras_require={'dev': ['tutor[dev]>=17.0.0']},
     entry_points={'tutor.plugin.v1': ['unibot = tutor_unibot.plugin']},
 )

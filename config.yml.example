@@ -4,5 +4,14 @@ EDX_UNIBOT_BRANCH: master
 EDX_UNIBOT_VCS_URL: https://git.intela.dev/open-source/uni-bot-on-open-edx/edx-unibot
 EDX_UNIBOT_PATH_INSIDE_CONTAINER: /openedx/requirements/edx-unibot/
 EDX_UNIBOT_SETTING_UNIBOT_BASE_URL: https://example.com
+EDX_UNIBOT_SETTING_UNIBOT_API_KEY: "extremely_strong_key"
 EDX_UNIBOT_SETTING_UNIBOT_JWT_SECRET_KEY: "<JWT_TOKEN>"
-EDX_UNIBOT_SETTING_INCLUDE_FILE_CONTENT_DURING_DATA_COLLECTION = True
+EDX_UNIBOT_SETTING_INCLUDE_FILE_CONTENT_DURING_DATA_COLLECTION: true
+EDX_UNIBOT_SETTING_UNIBOT_INSTRUCTOR_WIDGET_SCRIPT: "<script>console.log(\"Unibot script example\");</script>"
+EDX_UNIBOT_SETTING_UNIBOT_INSTRUCTOR_WIDGET_DISPLAYING_MODE: custom_widget_in_separate_tab
+UNIBOT_MFE_CONFIG_EXTERNAL_SCRIPTS:
+  - head: ""
+    body:
+      top: ""
+      bottom: "<script src=\"https://example.com/widget/loader.js\"></script>"
+    isAuthnRequired: false

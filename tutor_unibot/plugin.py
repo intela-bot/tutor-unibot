@@ -37,8 +37,7 @@ config = {
 # Add configuration entries
 hooks.Filters.CONFIG_DEFAULTS.add_items([(key, value) for key, value in config.get('defaults', {}).items()])
 
-# For each file in tutor_unibot/patches,
-# apply a patch based on the file's name and contents.
+# For each file in tutor_unibot/patches, apply a patch based on its name and contents.
 for path in glob(str(importlib_resources.files('tutor_unibot') / 'patches' / '*')):
     with open(path, encoding='utf-8') as patch_file:
         hooks.Filters.ENV_PATCHES.add_item((os.path.basename(path), patch_file.read()))
